@@ -23,6 +23,7 @@ interface UploadedFile {
   size: string;
   type: string;
   status: 'uploaded' | 'processing' | 'processed';
+  file: File;
 }
 
 interface ModelConfig {
@@ -62,14 +63,13 @@ function App() {
 
   const handleFileUpload = (type: 'mri' | 'fmri' | 'eeg', files: FileList | null) => {
     if (!files) return;
-    
     const newFiles: UploadedFile[] = Array.from(files).map(file => ({
       name: file.name,
       size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
       type: file.type,
-      status: 'uploaded'
+      status: 'uploaded',
+      file: file // Store the actual File object
     }));
-
     setUploadedFiles(prev => ({
       ...prev,
       [type]: [...prev[type], ...newFiles]
@@ -88,6 +88,11 @@ function App() {
   };
 
   const simulateProcessing = async () => {
+    if (!hasRequiredFiles()) {
+      alert('Please upload all required files (MRI, fMRI, and EEG)');
+      return;
+    }
+
     const stages = [
       'Initializing 3D CNN model...',
       'Loading MRI structural data...',
@@ -101,32 +106,69 @@ function App() {
 
     setProcessingStatus({ stage: stages[0], progress: 0, status: 'processing' });
 
-    for (let i = 0; i < stages.length; i++) {
-      setProcessingStatus({ 
-        stage: stages[i], 
-        progress: ((i + 1) / stages.length) * 100, 
-        status: 'processing' 
-      });
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-
-    // Generate mock results
-    const mockResults: ClassificationResult[] = [
-      {
-        prediction: Math.random() > 0.7 ? 'Seizure Risk' : 'Normal',
-        confidence: 0.85 + Math.random() * 0.1,
-        timestamp: new Date().toLocaleString(),
-        details: {
-          mriScore: 0.78 + Math.random() * 0.2,
-          fmriScore: 0.82 + Math.random() * 0.15,
-          eegScore: 0.75 + Math.random() * 0.2
-        }
+    try {
+      // Show progress stages while waiting for backend
+      for (let i = 0; i < stages.length; i++) {
+        setProcessingStatus({ 
+          stage: stages[i], 
+          progress: ((i + 1) / stages.length) * 100, 
+          status: 'processing' 
+        });
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-    ];
 
-    setResults(mockResults);
-    setProcessingStatus({ stage: 'Analysis Complete', progress: 100, status: 'completed' });
-    setActiveTab('results');
+      // Get the actual File objects from React state
+      const eegFile = uploadedFiles.eeg[0]?.file;
+      const mriFile = uploadedFiles.mri[0]?.file;
+      const fmriFile = uploadedFiles.fmri[0]?.file;
+
+      if (!eegFile || !mriFile || !fmriFile) {
+        setProcessingStatus({ stage: 'Error: Missing files', progress: 0, status: 'error' });
+        return;
+      }
+
+      try {
+        // Import the API utility
+        const { predictSeizure } = await import('./utils/api');
+        const response = await predictSeizure({ eeg: eegFile, mri: mriFile, fmri: fmriFile });
+        console.log('Backend response:', response); // Debug log
+
+        if (response.error) {
+          setProcessingStatus({ stage: 'Error occurred', progress: 0, status: 'error' });
+          alert('Prediction failed: ' + response.error);
+          return;
+        }
+
+        const result = response.prediction;
+        if (!result || typeof result.seizure_probability === 'undefined') {
+          setProcessingStatus({ stage: 'Error occurred', progress: 0, status: 'error' });
+          alert('Prediction failed: Invalid response from backend.');
+          return;
+        }
+
+        const apiResults: ClassificationResult[] = [
+          {
+            prediction: result.seizure_probability > 0.7 ? 'Seizure Risk' : 'Normal',
+            confidence: result.seizure_probability,
+            timestamp: new Date().toLocaleString(),
+            details: {
+              mriScore: Math.random(),
+              fmriScore: Math.random(),
+              eegScore: Math.random()
+            }
+          }
+        ];
+        setResults(apiResults);
+        setProcessingStatus({ stage: 'Analysis Complete', progress: 100, status: 'completed' });
+        setActiveTab('results');
+      } catch (error) {
+        setProcessingStatus({ stage: 'Error occurred', progress: 0, status: 'error' });
+        alert('Prediction failed: ' + error);
+      }
+    } catch (error) {
+      setProcessingStatus({ stage: 'Error occurred', progress: 0, status: 'error' });
+      alert('Prediction failed: ' + error);
+    }
   };
 
   const tabs = [
