@@ -637,6 +637,15 @@ function App() {
                     <Download className="h-4 w-4" />
                     <span>Export Results</span>
                   </button>
+                  <button
+                    className="ml-4 bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 font-medium inline-flex items-center space-x-2"
+                    onClick={() => {
+                      setActiveTab('upload');
+                      window.location.reload();
+                    }}
+                  >
+                    <span>Reset</span>
+                  </button>
                 </div>
               </div>
             )}
