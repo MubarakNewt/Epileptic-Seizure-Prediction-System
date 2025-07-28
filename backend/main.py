@@ -11,7 +11,10 @@ app = FastAPI()
 # ✅ ✅ ✅ Better CORS: allow credentials, allow any origin for testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://epileptic-seizure-prediction-system-flax.vercel.app"],  # Or restrict to ["https://your-frontend.vercel.app"]
+    allow_origins=[
+        "https://epileptic-seizure-prediction-system-flax.vercel.app",
+        "https://epileptic-seizure-prediction-system-fo2aebhei.vercel.app",
+    ],  # Or restrict to ["https://your-frontend.vercel.app"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
