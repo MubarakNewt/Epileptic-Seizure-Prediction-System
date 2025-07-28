@@ -22,16 +22,31 @@ export const predictSeizure = async (files: PredictionRequest): Promise<Predicti
   formData.append('mri', files.mri);
   formData.append('fmri', files.fmri);
 
-  const response = await fetch(`${API_BASE_URL}/predict`, {
-    method: 'POST',
-    body: formData,
-  });
+  // Create an AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes timeout
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  try {
+    const response = await fetch(`${API_BASE_URL}/predict`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out after 5 minutes. The processing is taking too long.');
+    }
+    throw error;
   }
-
-  return await response.json();
 };
 
 export const checkBackendHealth = async (): Promise<boolean> => {
