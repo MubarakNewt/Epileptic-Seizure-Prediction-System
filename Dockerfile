@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 8080
 
 # ✅ Use Gunicorn + Uvicorn worker to run FastAPI
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "backend.main:app", "--bind", "0.0.0.0:8080"]
+CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "backend.main:app", "--bind", "0.0.0.0:8080", "--timeout", "300"]
