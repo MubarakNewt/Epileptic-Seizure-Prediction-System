@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from model import predict_seizure
-from data_utils import MedicalDataProcessor
+from backend.model import predict_seizure
+from backend.data_utils import MedicalDataProcessor
 import shutil
 import os
 import numpy as np
