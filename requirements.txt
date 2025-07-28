@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+mne
+nibabel
+numpy
+python-multipart
+pathlib
+python-multipart
