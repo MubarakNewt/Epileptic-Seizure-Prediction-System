@@ -8,10 +8,11 @@ import numpy as np
 
 app = FastAPI()
 
-# Allow requests from any frontend (you can restrict this later)
+# ✅ ✅ ✅ Better CORS: allow credentials, allow any origin for testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://epileptic-seizure-prediction-system-flax.vercel.app"],  # Or restrict to ["https://your-frontend.vercel.app"]
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
