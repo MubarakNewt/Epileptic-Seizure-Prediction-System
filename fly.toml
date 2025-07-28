@@ -1,0 +1,9 @@
+# fly.toml generated manually
+app = "epileptic-seizure-prediction-system"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
