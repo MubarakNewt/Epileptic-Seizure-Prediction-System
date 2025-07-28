@@ -1,6 +1,6 @@
 // API utility functions for backend communication
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://epileptic-seizure-prediction-system.onrender.com';
 
 export interface PredictionRequest {
   eeg: File;
